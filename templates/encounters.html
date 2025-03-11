@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Encounters List</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Add viewport meta tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -17,6 +17,7 @@
                 <th>CPF</th>
                 <th>Status</th>
                 <th>Download .med</th>
+                <th>Download Key</th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +30,13 @@
                 <td data-label="Download .med">
                     {% if encounter['status'] == 'finalized' %}
                     <a href="{{ url_for('get_encounter', id=encounter['id']) }}" download>Download</a>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td data-label="Download Key">
+                    {% if encounter['status'] == 'finalized' %}
+                    <a href="{{ url_for('get_encounter_key', id=encounter['id']) }}" download>Download</a>
                     {% else %}
                     N/A
                     {% endif %}
