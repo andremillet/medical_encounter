@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Encounters List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Add viewport meta tag -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -21,11 +22,11 @@
         <tbody>
             {% for encounter in encounters %}
             <tr>
-                <td>{{ encounter['id'] }}</td>
-                <td>{{ encounter['patient_name'] or 'Not specified' }}</td>
-                <td>{{ encounter['cpf'] or 'Not specified' }}</td>
-                <td>{{ encounter['status'] }}</td>
-                <td>
+                <td data-label="ID">{{ encounter['id'] }}</td>
+                <td data-label="Patient Name">{{ encounter['patient_name'] or 'Not specified' }}</td>
+                <td data-label="CPF">{{ encounter['cpf'] or 'Not specified' }}</td>
+                <td data-label="Status">{{ encounter['status'] }}</td>
+                <td data-label="Download .med">
                     {% if encounter['status'] == 'finalized' %}
                     <a href="{{ url_for('get_encounter', id=encounter['id']) }}" download>Download</a>
                     {% else %}

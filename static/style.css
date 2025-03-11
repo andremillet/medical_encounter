@@ -1,13 +1,178 @@
-body { font-family: Arial, sans-serif; margin: 20px; }
-h1, h2 { color: #333; }
-label { display: block; margin: 10px 0; }
-input, textarea, select { width: 100%; max-width: 300px; padding: 5px; }
-button { padding: 8px 16px; margin: 5px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-button:hover { background-color: #0056b3; }
-#conducts-list p { margin: 5px 0; padding: 5px; background-color: #f8f9fa; border: 1px solid #ddd; }
-#conduct-form { margin-top: 10px; padding: 10px; border: 1px solid #ccc; background-color: #f1f1f1; }
-table { width: 100%; max-width: 800px; border-collapse: collapse; margin-top: 20px; }
-th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-th { background-color: #f8f9fa; }
-a { color: #007bff; text-decoration: none; }
-a:hover { text-decoration: underline; }
+/* General styles for all devices */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1, h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+input, textarea, select {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+button {
+    padding: 8px 16px;
+    margin: 5px 5px 5px 0;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#conducts-list p {
+    margin: 5px 0;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#conduct-form {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+}
+
+table {
+    width: 100%;
+    max-width: 800px;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile-specific styles (applied when screen width is 600px or less) */
+@media (max-width: 600px) {
+    body {
+        margin: 10px; /* Reduce margin for smaller screens */
+    }
+
+    h1 {
+        font-size: 24px; /* Smaller heading */
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    label {
+        font-size: 14px; /* Smaller labels */
+    }
+
+    input, textarea, select {
+        max-width: 100%; /* Full width on mobile */
+        font-size: 12px; /* Smaller text for inputs */
+        padding: 6px; /* Slightly less padding */
+    }
+
+    textarea {
+        min-height: 60px; /* Shorter textarea */
+    }
+
+    button {
+        width: 100%; /* Full-width buttons */
+        padding: 10px; /* Slightly taller for touch */
+        font-size: 12px;
+        margin: 5px 0; /* Stack buttons vertically */
+    }
+
+    #conducts-list p {
+        font-size: 12px; /* Smaller text in conducts list */
+        padding: 6px;
+    }
+
+    #conduct-form {
+        padding: 8px; /* Less padding */
+    }
+
+    table {
+        font-size: 12px; /* Smaller table text */
+    }
+
+    th, td {
+        padding: 6px; /* Reduced padding for table cells */
+        word-wrap: break-word; /* Prevent overflow */
+    }
+
+    /* Stack table columns on very small screens */
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px; /* Hide header row off-screen */
+    }
+
+    tr {
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+    }
+
+    td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%; /* Space for pseudo-label */
+    }
+
+    td:before {
+        content: attr(data-label); /* Use data-label for column names */
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+    }
+}
