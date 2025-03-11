@@ -53,9 +53,14 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Initialize database on first request to ensure disk is mounted
-@app.before_first_request
-def initialize_database():
+# Initialize database at app startup with error handling
+try:
+    init_db()
+except sqlite3.OperationalError as e:
+    print(f"Database initialization failed: {e}")
+    # Retry once after a short delay (in case disk isn't mounted yet)
+    import time
+    time.sleep(1)
     init_db()
 
 # Route to render the encounter form
