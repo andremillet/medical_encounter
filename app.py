@@ -8,10 +8,6 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Simulated encryption key (store securely in production)
-ENCRYPTION_KEY = Fernet.generate_key()
-cipher = Fernet(ENCRYPTION_KEY)
-
 # Simulated physician signing key (replace with actual key management in production)
 PHYSICIAN_KEY = "simulated-physician-key-123"
 
@@ -23,8 +19,12 @@ with open('exams.json') as f:
 with open('referrals.json') as f:
     REFERRALS = json.load(f)
 
+# Ensure med_files directory exists
+if not os.path.exists('med_files'):
+    os.makedirs('med_files')
+
 def get_db_connection():
-    db_path = '/app/emr.db'
+    db_path = '/app/emr.db'  # For Render deployment; use 'emr.db' for local testing
     os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure directory exists
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -53,12 +53,19 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Generate and save encryption key for each encounter
+def generate_and_save_key(encounter_id):
+    key = Fernet.generate_key()
+    key_file_path = f"med_files/key_{encounter_id}.key"
+    with open(key_file_path, 'wb') as f:
+        f.write(key)
+    return key
+
 # Initialize database at app startup with error handling
 try:
     init_db()
 except sqlite3.OperationalError as e:
     print(f"Database initialization failed: {e}")
-    # Retry once after a short delay (in case disk isn't mounted yet)
     import time
     time.sleep(1)
     init_db()
@@ -134,6 +141,10 @@ def commit_conducts(encounter_id):
         cursor.execute("SELECT type, details FROM conducts WHERE encounter_id = ?", (encounter_id,))
         conducts = [{'type': row['type'], 'details': json.loads(row['details'])} for row in cursor.fetchall()]
 
+        # Generate and save a unique encryption key for this encounter
+        encryption_key = generate_and_save_key(encounter_id)
+        cipher = Fernet(encryption_key)
+
         # Create treatment plan JSON (FHIR-compatible structure)
         treatment_plan = {
             'resourceType': 'Encounter',
@@ -172,6 +183,11 @@ def commit_conducts(encounter_id):
         conn.commit()
         conn.close()
 
+        # Save the encrypted .med file locally
+        med_file_path = f"med_files/treatment_plan_{encounter_id}.med"
+        with open(med_file_path, 'wb') as f:
+            f.write(encrypted_med)
+
         # Send encrypted file for download
         return send_file(
             BytesIO(encrypted_med),
@@ -208,6 +224,19 @@ def get_encounter(id):
             download_name=f'encounter_{id}.med'
         )
     return jsonify({'error': 'Encounter not found or no treatment plan available'}), 404
+
+# New route to download the .key file
+@app.route('/api/encounter/key/<int:id>', methods=['GET'])
+def get_encounter_key(id):
+    key_file_path = f"med_files/key_{id}.key"
+    if os.path.exists(key_file_path):
+        return send_file(
+            key_file_path,
+            mimetype='application/octet-stream',
+            as_attachment=True,
+            download_name=f'key_{id}.key'
+        )
+    return jsonify({'error': 'Key file not found'}), 404
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
