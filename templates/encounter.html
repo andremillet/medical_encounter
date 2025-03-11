@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical Encounter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>New Medical Encounter</h1>
+    <form id="encounter-form">
+        <input type="hidden" name="encounter_id" value="{{ encounter_id }}">
+        <label>Patient Name: <input type="text" name="patient_name" required></label><br>
+        <label>CPF: <input type="text" name="cpf" pattern="\d{11}" required></label><br>
+        <label>Annotations: <textarea name="annotations"></textarea></label><br>
+        <label>Diagnostic Hypothesis: <textarea name="diagnostic_hypothesis"></textarea></label><br>
+
+        <h2>Medical Conducts</h2>
+        <div id="conducts-list"></div>
+        <button type="button" id="new-conduct">New Conduct</button>
+        <div id="conduct-form" style="display: none;">
+            <label>Type:
+                <select id="conduct-type">
+                    <option value="prescription">Prescribe Medication</option>
+                    <option value="exam">Request Exam</option>
+                    <option value="referral">Refer Patient</option>
+                </select>
+            </label><br>
+
+            <div id="prescription-fields" class="type-fields">
+                <label>Medication: <input type="text" id="medication-name" list="medication-suggestions"></label>
+                <datalist id="medication-suggestions"></datalist><br>
+                <label>Dose: <input type="text" id="dose"></label><br>
+                <label>Administration: <input type="text" id="administration"></label><br>
+            </div>
+            <div id="exam-fields" class="type-fields" style="display: none;">
+                <label>Exam: <input type="text" id="exam-name" list="exam-suggestions"></label>
+                <datalist id="exam-suggestions"></datalist><br>
+                <label>Observations: <textarea id="exam-observations"></textarea></label><br>
+            </div>
+            <div id="referral-fields" class="type-fields" style="display: none;">
+                <label>Service: <input type="text" id="referral-service" list="referral-suggestions"></label>
+                <datalist id="referral-suggestions"></datalist><br>
+                <label>Observations: <textarea id="referral-observations"></textarea></label><br>
+            </div>
+
+            <button type="button" id="add-conduct">Add Conduct</button>
+            <button type="button" id="cancel-conduct">Cancel</button>
+        </div>
+        <button type="button" id="commit-conducts">Commit Conducts</button>
+    </form>
+
+    <script>
+        const encounterId = document.querySelector('input[name="encounter_id"]').value;
+        const conductsList = document.getElementById('conducts-list');
+        const conductForm = document.getElementById('conduct-form');
+
+        // Show conduct form
+        document.getElementById('new-conduct').addEventListener('click', () => {
+            conductForm.style.display = 'block';
+        });
+
+        // Cancel conduct
+        document.getElementById('cancel-conduct').addEventListener('click', () => {
+            conductForm.style.display = 'none';
+            resetConductForm();
+        });
+
+        // Toggle fields based on conduct type
+        document.getElementById('conduct-type').addEventListener('change', (e) => {
+            document.querySelectorAll('.type-fields').forEach(field => field.style.display = 'none');
+            document.getElementById(`${e.target.value}-fields`).style.display = 'block';
+        });
+
+        // Autocomplete functionality
+        function setupAutocomplete(inputId, datalistId, type) {
+            const input = document.getElementById(inputId);
+            const datalist = document.getElementById(datalistId);
+            input.addEventListener('input', async () => {
+                const query = input.value;
+                if (query.length < 1) return;
+                const response = await fetch(`/api/suggestions/${type}?q=${query}`);
+                const suggestions = await response.json();
+                datalist.innerHTML = suggestions.map(s => `<option value="${s}">`).join('');
+            });
+        }
+        setupAutocomplete('medication-name', 'medication-suggestions', 'medications');
+        setupAutocomplete('exam-name', 'exam-suggestions', 'exams');
+        setupAutocomplete('referral-service', 'referral-suggestions', 'referrals');
+
+        // Add conduct
+        document.getElementById('add-conduct').addEventListener('click', async () => {
+            const type = document.getElementById('conduct-type').value;
+            let details = {};
+            let summary = '';
+
+            if (type === 'prescription') {
+                details = {
+                    medication: document.getElementById('medication-name').value,
+                    dose: document.getElementById('dose').value,
+                    administration: document.getElementById('administration').value
+                };
+                summary = `${details.medication} ${details.dose} ${details.administration}`;
+            } else if (type === 'exam') {
+                details = {
+                    exam: document.getElementById('exam-name').value,
+                    observations: document.getElementById('exam-observations').value
+                };
+                summary = `${details.exam} - ${details.observations || 'No observations'}`;
+            } else if (type === 'referral') {
+                details = {
+                    service: document.getElementById('referral-service').value,
+                    observations: document.getElementById('referral-observations').value
+                };
+                summary = `${details.service} - ${details.observations || 'No observations'}`;
+            }
+
+            const response = await fetch('/api/conduct/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ encounter_id: encounterId, type, details })
+            });
+            if (response.ok) {
+                conductsList.innerHTML += `<p>${summary}</p>`;
+                conductForm.style.display = 'none';
+                resetConductForm();
+            } else {
+                alert('Error adding conduct');
+            }
+        });
+
+        // Commit conducts
+        document.getElementById('commit-conducts').addEventListener('click', async () => {
+            const formData = {
+                patient_name: document.querySelector('input[name="patient_name"]').value,
+                cpf: document.querySelector('input[name="cpf"]').value,
+                annotations: document.querySelector('textarea[name="annotations"]').value,
+                diagnostic_hypothesis: document.querySelector('textarea[name="diagnostic_hypothesis"]').value
+            };
+
+            const response = await fetch(`/api/conduct/commit/${encounterId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `treatment_plan_${encounterId}.med`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+                const choice = confirm('Conducts committed. Edit encounter or finish? (OK to edit, Cancel to finish)');
+                if (!choice) {
+                    window.location.href = '/encounters';  // Redirect to encounters list
+                }
+            } else {
+                alert('Error committing conducts');
+            }
+        });
+
+        function resetConductForm() {
+            document.getElementById('conduct-type').value = 'prescription';
+            document.querySelectorAll('.type-fields').forEach(field => field.style.display = 'none');
+            document.getElementById('prescription-fields').style.display = 'block';
+            document.querySelectorAll('#conduct-form input, #conduct-form textarea').forEach(el => el.value = '');
+        }
+    </script>
+</body>
+</html>

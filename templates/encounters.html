@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Encounters List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Encounters List</h1>
+    <button onclick="window.location.href='/encounter/new'">New Encounter</button>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Patient Name</th>
+                <th>CPF</th>
+                <th>Status</th>
+                <th>Download .med</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for encounter in encounters %}
+            <tr>
+                <td>{{ encounter['id'] }}</td>
+                <td>{{ encounter['patient_name'] or 'Not specified' }}</td>
+                <td>{{ encounter['cpf'] or 'Not specified' }}</td>
+                <td>{{ encounter['status'] }}</td>
+                <td>
+                    {% if encounter['status'] == 'finalized' %}
+                    <a href="{{ url_for('get_encounter', id=encounter['id']) }}" download>Download</a>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
