@@ -24,7 +24,7 @@ with open('referrals.json') as f:
     REFERRALS = json.load(f)
 
 def get_db_connection():
-    conn = sqlite3.connect('emr.db')
+    conn = sqlite3.connect('/app/emr.db')
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -201,4 +201,5 @@ def get_encounter(id):
     return jsonify({'error': 'Encounter not found or no treatment plan available'}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
