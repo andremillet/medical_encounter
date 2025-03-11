@@ -24,11 +24,12 @@ with open('referrals.json') as f:
     REFERRALS = json.load(f)
 
 def get_db_connection():
-    conn = sqlite3.connect('/app/emr.db')
+    db_path = '/app/emr.db'
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Ensure directory exists
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
-# Initialize database
 def init_db():
     conn = get_db_connection()
     conn.executescript('''
@@ -52,7 +53,10 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+# Initialize database on first request to ensure disk is mounted
+@app.before_first_request
+def initialize_database():
+    init_db()
 
 # Route to render the encounter form
 @app.route('/encounter/new', methods=['GET'])
