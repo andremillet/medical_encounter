@@ -78,8 +78,6 @@ O **Módulo de Encontro Médico** é um componente independente de um sistema de
 - Substituir JSON por tabelas de banco de dados reais.
 - Adicionar suporte a edição de encontros antes da finalização.
 
-### Licença
-Este projeto é de código aberto sob a licença MIT.
 
 ---
 
